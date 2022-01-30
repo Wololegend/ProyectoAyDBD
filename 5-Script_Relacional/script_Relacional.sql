@@ -125,6 +125,7 @@ DROP TABLE IF EXISTS Copia_Fisica CASCADE;
 
 CREATE TABLE IF NOT EXISTS Copia_Fisica (
     Serial SERIAL UNIQUE NOT NULL,
+    Email_NoBasico VARCHAR(50) NOT NULL,
     Distribuidora VARCHAR(45) NOT NULL,
     Nombre_Videojuego VARCHAR(45) NOT NULL,
     Año DATE NOT NULL CHECK (Año > 'Jan-01-1950' AND Año < CURRENT_DATE),
@@ -134,6 +135,12 @@ CREATE TABLE IF NOT EXISTS Copia_Fisica (
     CONSTRAINT fk_Videojuego_CopiaFisica 
         FOREIGN KEY (Distribuidora, Nombre_Videojuego, Año)
         REFERENCES Videojuego (Distribuidora, Nombre, Año) 
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION,
+
+    CONSTRAINT fk_NoBasico_CopiaFisica 
+        FOREIGN KEY (Email_NoBasico)
+        REFERENCES No_Basico (Email) 
         ON DELETE NO ACTION
         ON UPDATE NO ACTION
 );
@@ -187,31 +194,6 @@ CREATE TABLE IF NOT EXISTS Pertenece (
     CONSTRAINT fk_Categoria_Pertenece
         FOREIGN KEY (Nombre_Categoria)
         REFERENCES Categoria (Nombre)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-);
-
-
--- -----------------------------------------------------
--- Tabla Recibe
--- -----------------------------------------------------
-DROP TABLE IF EXISTS Recibe CASCADE;
-
-CREATE TABLE IF NOT EXISTS Recibe (
-    Serial_CpFisica INT NOT NULL,
-    Email_NoBasico VARCHAR(45) NOT NULL,
-
-    PRIMARY KEY (Serial_CpFisica, Email_NoBasico),
-
-    CONSTRAINT fk_CpFisica_Recibe
-        FOREIGN KEY (Serial_CpFisica)
-        REFERENCES Copia_Fisica (Serial)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-
-    CONSTRAINT fk_NoBasico_Recibe
-        FOREIGN KEY (Email_NoBasico)
-        REFERENCES No_Basico (Email)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
@@ -452,20 +434,20 @@ VALUES ('ID@Xbox', 'A Knight in the Woods', 'Jul-25-2013', 18, 'No Reciente');
 -- -----------------------------------------------------
 -- Carga de datos para Copia_Fisica
 -- -----------------------------------------------------
-INSERT INTO Copia_Fisica (Serial, Distribuidora, Nombre_Videojuego, Año)
-VALUES (1, 'Activision-Blizzard', 'Call of Duty: Black Ops II', 'Nov-12-2012');
+INSERT INTO Copia_Fisica (Serial, Email_NoBasico, Distribuidora, Nombre_Videojuego, Año)
+VALUES (1, 'usuario5@gmail.com', 'Activision-Blizzard', 'Call of Duty: Black Ops II', 'Nov-12-2012');
 
-INSERT INTO Copia_Fisica (Serial, Distribuidora, Nombre_Videojuego, Año)
-VALUES (2, 'Epic Games', 'Battletop', 'Jul-21-2017');
+INSERT INTO Copia_Fisica (Serial, Email_NoBasico, Distribuidora, Nombre_Videojuego, Año)
+VALUES (2, 'usuario5@gmail.com', 'Epic Games', 'Battletop', 'Jul-21-2017');
 
-INSERT INTO Copia_Fisica (Serial, Distribuidora, Nombre_Videojuego, Año)
-VALUES (3, 'Epic Games', 'Battletop', 'Jul-21-2017');
+INSERT INTO Copia_Fisica (Serial, Email_NoBasico, Distribuidora, Nombre_Videojuego, Año)
+VALUES (3, 'usuario6@gmail.com', 'Epic Games', 'Battletop', 'Jul-21-2017');
 
-INSERT INTO Copia_Fisica (Serial, Distribuidora, Nombre_Videojuego, Año)
-VALUES (4, 'Xbox Game Studios', 'Age of Empires IV', 'Oct-28-2021');
+INSERT INTO Copia_Fisica (Serial, Email_NoBasico, Distribuidora, Nombre_Videojuego, Año)
+VALUES (4, 'usuario6@gmail.com', 'Xbox Game Studios', 'Age of Empires IV', 'Oct-28-2021');
 
-INSERT INTO Copia_Fisica (Serial, Distribuidora, Nombre_Videojuego, Año)
-VALUES (5, 'Xbox Game Studios', 'Age of Empires IV', 'Oct-28-2021');
+INSERT INTO Copia_Fisica (Serial, Email_NoBasico, Distribuidora, Nombre_Videojuego, Año)
+VALUES (5, 'usuario7@gmail.com', 'Xbox Game Studios', 'Age of Empires IV', 'Oct-28-2021');
 
 
 -- -----------------------------------------------------
@@ -507,25 +489,6 @@ VALUES ('Annapurna Interactive', 'Outer Wilds', 'May-28-2019', 'Walking Simulato
 
 INSERT INTO Pertenece (Distribuidora, Nombre_Videojuego, Año, Nombre_Categoria)
 VALUES ('ID@Xbox', 'A Knight in the Woods', 'Jul-25-2013', 'Walking Simulator / Exploración');
-
-
--- -----------------------------------------------------
--- Carga de datos para Recibe
--- -----------------------------------------------------
-INSERT INTO Recibe (Serial_CpFisica, Email_NoBasico)
-VALUES (1, 'usuario5@gmail.com');
-
-INSERT INTO Recibe (Serial_CpFisica, Email_NoBasico)
-VALUES (2, 'usuario5@gmail.com');
-
-INSERT INTO Recibe (Serial_CpFisica, Email_NoBasico)
-VALUES (3, 'usuario6@gmail.com');
-
-INSERT INTO Recibe (Serial_CpFisica, Email_NoBasico)
-VALUES (4, 'usuario6@gmail.com');
-
-INSERT INTO Recibe (Serial_CpFisica, Email_NoBasico)
-VALUES (5, 'usuario7@gmail.com');
 
 
 -- -----------------------------------------------------
@@ -721,9 +684,9 @@ WHERE Email = 'usuarioTest3@gmail.com';
 -- Sólo los usuarios de la tabla NO_BASICO con Tipo
 -- 'Deluxe' pueden estar en la tabla RECIBE.
 -- -----------------------------------------------------
-DROP FUNCTION IF EXISTS Recibe_Insert() CASCADE;
+DROP FUNCTION IF EXISTS CpFisica_Insert() CASCADE;
 
-CREATE FUNCTION Recibe_Insert() RETURNS TRIGGER AS $$
+CREATE FUNCTION CpFisica_Insert() RETURNS TRIGGER AS $$
     BEGIN
         IF ((SELECT Tipo
              FROM No_Basico
@@ -737,8 +700,8 @@ CREATE FUNCTION Recibe_Insert() RETURNS TRIGGER AS $$
 	END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER Check_Recibe_Insert 
-BEFORE INSERT ON Recibe EXECUTE PROCEDURE Recibe_Insert();
+CREATE TRIGGER Check_CpFisica_Insert 
+BEFORE INSERT ON Copia_Fisica EXECUTE PROCEDURE CpFisica_Insert();
 
 -- Tests para el trigger --
 INSERT INTO Usuario (Email, Contraseña, Nombre, Imagen)
@@ -749,9 +712,6 @@ VALUES ('usuarioTest4@gmail.com', 'contraseña', 'UsuarioTest4', NULL, 'Premium'
 
 INSERT INTO Copia_Fisica (Serial, Distribuidora, Nombre_Videojuego, Año)
 VALUES (6, 'Xbox Game Studios', 'Age of Empires IV', 'Oct-28-2021');
-
-INSERT INTO Recibe (Serial_CpFisica, Email_NoBasico)
-VALUES (6, 'usuarioTest4@gmail.com');
 
 SELECT *
 FROM Recibe
