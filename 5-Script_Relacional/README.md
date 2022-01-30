@@ -17,6 +17,8 @@
 8. [Los usuarios No Básicos **juegan** a videojuegos](#jueganobasico)
 9. [Los usuarios No Básicos **juegan a videojuegos online** entre ellos](#juegaonline)
 10. [Comprobar la inserción en **Basico y No_Basico**](#checkbasicoinsert)
+11. [Comprobar la inserción en **Externo y De_Indev**](#checkexternoinsert)
+
 
 
 ### **Tablas para almacenar Usuarios** <a name="usuarios"/>
@@ -147,4 +149,51 @@ Para comprobar su funcionamiento se trata de insertar datos erróneos duplicados
 
 ![Error_Check_Basico_Insert](img/2022-01-30-12-15-51.png)
 
-Además, también se modelizó que todos los usuarios de **Basico** y **No_Basico** debían estar en **Usuario**.
+Además, también se modelizó que todos los usuarios de **Basico** y **No_Basico** debían estar en **Usuario**. Esto se comprueba en la inserción de ambas subtablas por los triggers **Basico_EstaEn_Usuario_Trigger* y **NoBasico_EstaEn_Usuario_Trigger**.
+
+![Basico_EstaEn_Usuario_Trigger](img/2022-01-30-12-20-36.png)
+
+Sendos triggers realizan las mismas acciones, descritas en la función **EstaEn_Usuario**: Comprueban si el Email insertado está en la lista de los de la tabla **Usuario**, y si no lo está lanza un mensaje de error.
+
+Para comprobar su funcionamiento se trata de insertar usuarios nuevos directamente en **Basico** y **No_Basico**.
+
+![Insert_Basico_EstaEn_Usuario_Trigger](img/2022-01-30-12-22-57.png)
+
+![Error_Basico_EstaEn_Usuario_Trigger](img/2022-01-30-12-23-26.png)
+
+
+### **Comprobar la inserción en Externo y De_Indev** <a name="checkexternoinsert"/>
+Las tablas **Videojuego**, **Externo** y **De_Indev** tienen la misma relación que la de los usuarios, por lo que sus triggers de inserción son casi iguales.
+
+Comprobaciones para que no se repitan datos entre las subtablas **Externo** y **De_Indev** con inserciones erróneas para que se activen los triggers:
+
+![Check_Externo_Insert](img/2022-01-30-12-26-53.png)
+
+![Check_DeIndev_Insert](img/2022-01-30-12-27-19.png)
+
+![Insert_Check_Externo_Insert](img/2022-01-30-12-28-11.png)
+
+![Error_Check_Externo_Insert](img/2022-01-30-12-28-44.png)
+
+Y triggers para evitar la inserción de videojuegos que no estén en **Videojuegos**, junto a sus respectivas inserciones "ilegales" para comprobar el funcionamiento de los procedimientos.
+
+![Externo_EstaEn_Videojuego_Trigger](img/2022-01-30-12-37-25.png)
+
+![Insert_Externo_EstaEn_Videojuego_Trigger](img/2022-01-30-12-46-21.png)
+
+![Error_Externo_EstaEn_Videojuego_Trigger](img/2022-01-30-12-38-15.png)
+
+
+### **Comprobar la inserción en Copia_Fisica** <a name="checkcategoriainsert"/>
+Como se comentó anteriormente, sólamente los usuarios No Básicos cuyo tipo sea _Deluxe_ pueden recibir copias físicas de videojuegos. Esto se comprueba mediante el trigger **Check_CpFisica_Insert**:
+
+![Check_CpFisica_Insert](img/2022-01-30-12-55-44.png)
+
+Al insertar un registro en la tabla Copia_Fisica, selecciona el usuario con el email insertado y tipo _Deluxe_. Si la selección es nula, el tipo es incorrecto, por lo que lanza un mensaje de error.
+
+Para comprobar el funcionamiento del trigger se realizan una serie de inserciones erróneas.
+
+![Insert_Check_CpFisica_Insert](img/2022-01-30-12-57-33.png)
+
+![Error_Check_CpFisica_Insert](img/2022-01-30-12-58-05.png)
+
