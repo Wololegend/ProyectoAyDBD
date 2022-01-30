@@ -408,14 +408,14 @@ VALUES ('ID@Xbox', 'A Knight in the Woods', 'Jul-25-2013', 18);
 -- -----------------------------------------------------
 -- Carga de datos para Externo
 -- -----------------------------------------------------
-INSERT INTO Externo (Distribuidora, Nombre, Año, PEGI)
-VALUES ('Activision-Blizzard', 'Call of Duty: Black Ops II', 'Nov-12-2012', 18);
+INSERT INTO Externo (Distribuidora, Nombre, Año, PEGI, Desarrolladora)
+VALUES ('Activision-Blizzard', 'Call of Duty: Black Ops II', 'Nov-12-2012', 18, 'Activision-Blizzard');
 
-INSERT INTO Externo (Distribuidora, Nombre, Año, PEGI)
-VALUES ('Xbox Game Studios', 'Age of Empires IV', 'Oct-28-2021', 7);
+INSERT INTO Externo (Distribuidora, Nombre, Año, PEGI, Desarrolladora)
+VALUES ('Xbox Game Studios', 'Age of Empires IV', 'Oct-28-2021', 7, 'Xbox Game Studios');
 
-INSERT INTO Externo (Distribuidora, Nombre, Año, PEGI)
-VALUES ('Annapurna Interactive', 'Outer Wilds', 'May-28-2019', 7);
+INSERT INTO Externo (Distribuidora, Nombre, Año, PEGI, Desarrolladora)
+VALUES ('Annapurna Interactive', 'Outer Wilds', 'May-28-2019', 7, 'Mobius Games');
 
 
 -- -----------------------------------------------------
@@ -544,8 +544,6 @@ VALUES ('usuario6@gmail.com', 'usuario7@gmail.com', 'Epic Games', 'Battletop', '
 
 INSERT INTO Juega_Online (Email_NoBasico1, Email_NoBasico2, Distribuidora, Nombre_Videojuego, Año)
 VALUES ('usuario6@gmail.com', 'usuario5@gmail.com', 'Activision-Blizzard', 'Call of Duty: Black Ops II', 'Nov-12-2012');
-
-
 
 
 -- -----------------------------------------------------
@@ -680,9 +678,9 @@ WHERE Email = 'usuarioTest3@gmail.com';
 
 
 -- -----------------------------------------------------
--- Función y Trigger Recibe_Insert
+-- Función y Trigger CpFisica_Insert
 -- Sólo los usuarios de la tabla NO_BASICO con Tipo
--- 'Deluxe' pueden estar en la tabla RECIBE.
+-- 'Deluxe' pueden estar en la tabla Copia_Fisica.
 -- -----------------------------------------------------
 DROP FUNCTION IF EXISTS CpFisica_Insert() CASCADE;
 
@@ -710,22 +708,19 @@ VALUES ('usuarioTest4@gmail.com', 'contraseña', 'UsuarioTest4', NULL);
 INSERT INTO No_Basico (Email, Contraseña, Nombre, Imagen, Tipo)
 VALUES ('usuarioTest4@gmail.com', 'contraseña', 'UsuarioTest4', NULL, 'Premium');
 
-INSERT INTO Copia_Fisica (Serial, Distribuidora, Nombre_Videojuego, Año)
-VALUES (6, 'Xbox Game Studios', 'Age of Empires IV', 'Oct-28-2021');
+INSERT INTO Copia_Fisica (Serial, Email_NoBasico, Distribuidora, Nombre_Videojuego, Año)
+VALUES (6, 'usuarioTest4@gmail.com', 'Xbox Game Studios', 'Age of Empires IV', 'Oct-28-2021');
 
 SELECT *
-FROM Recibe
+FROM Copia_Fisica
 WHERE Email_NoBasico = 'usuarioTest4@gmail.com' AND
-      Serial_CpFisica = 6;
+      Serial = 6;
 
 DELETE FROM Usuario
 WHERE Email = 'usuarioTest4@gmail.com';
 
 DELETE FROM No_Basico
 WHERE Email = 'usuarioTest4@gmail.com';
-
-DELETE FROM Copia_Fisica
-WHERE Serial = 6;
 
 
 -- -----------------------------------------------------
@@ -818,6 +813,50 @@ WHERE Distribuidora = 'DistTest';
 SELECT *
 FROM De_Indev
 WHERE Distribuidora = 'DistTest';
+
+
+-- -----------------------------------------------------
+-- Función y Trigger EstaEn_Videojuego
+-- Todos los usuarios de las relaciones EXTERNO y
+-- DE_INDEV tienen que estar en VIDEOJUEGO.
+-- -----------------------------------------------------
+DROP FUNCTION IF EXISTS EstaEn_Videojuego() CASCADE;
+
+CREATE FUNCTION EstaEn_Videojuego() RETURNS TRIGGER AS $$
+    BEGIN
+        IF ((SELECT Nombre
+             FROM Videojuego
+             WHERE (Distribuidora = NEW.Distribuidora AND
+                    Nombre = NEW.Nombre AND
+                    Año = NEW.Año)) IS NULL) THEN
+            RAISE 'Videojuego no admitido.'
+            USING HINT = 'Todos los videojuegos tienen que estar en la tabla Videojuegos antes que en cualquier otra.';
+        END IF;
+
+        RETURN NEW;
+	END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER Externo_EstaEn_Videojuego_Trigger 
+BEFORE INSERT ON Externo FOR EACH ROW EXECUTE PROCEDURE EstaEn_Videojuego();
+
+CREATE TRIGGER DeIndev_EstaEn_Videojuego_Trigger 
+BEFORE INSERT ON De_Indev FOR EACH ROW EXECUTE PROCEDURE EstaEn_Videojuego();
+
+-- Tests para el trigger --
+INSERT INTO Externo (Distribuidora, Nombre, Año, PEGI, Desarrolladora)
+VALUES ('DistTest1', 'VideojuegoTest1', 'Jan-01-2000', NULL, 'DesTest');
+
+INSERT INTO De_Indev (Distribuidora, Nombre, Año, PEGI, Tipo)
+VALUES ('DistTest2', 'VideojuegoTest2', 'Feb-01-2000', NULL, 'No Reciente');
+
+SELECT *
+FROM Externo
+WHERE Distribuidora = 'DistTest1';
+
+SELECT *
+FROM De_Indev
+WHERE Distribuidora = 'DistTest2';
 
 
 -- -----------------------------------------------------
@@ -970,16 +1009,6 @@ WHERE Distribuidora = 'DistTest4';
 -- categoría, se actualiza la cuenta de videojuegos
 -- por categoría.
 -- -----------------------------------------------------
-DROP FUNCTION IF EXISTS Cuenta_Titulos() CASCADE;
-
-CREATE FUNCTION Cuenta_Titulos() RETURNS INTEGER AS $count$
-    BEGIN
-        RETURN (SELECT COUNT(*)::int
-                FROM Pertenece
-                WHERE Nombre_Categoria = NEW.Nombre_Categoria);
-	END;
-$count$ LANGUAGE plpgsql;
-
 DROP FUNCTION IF EXISTS Actualiza_Categoria() CASCADE;
 
 CREATE FUNCTION Actualiza_Categoria() RETURNS TRIGGER AS $$
@@ -1006,3 +1035,16 @@ VALUES ('CatTest', 0);
 
 INSERT INTO Pertenece (Distribuidora, Nombre_Videojuego, Año, Nombre_Categoria)
 VALUES ('DistTest3', 'VideojuegoTest3', 'Jan-01-2000', 'CatTest');
+
+SELECT *
+FROM Categoria
+WHERE Nombre = 'CatTest';
+
+DELETE FROM Pertenece
+WHERE Distribuidora = 'DistTest3';
+
+DELETE FROM Categoria
+WHERE Nombre = 'CatTest';
+
+DELETE FROM Videojuego
+WHERE Distribuidora = 'DistTest3';

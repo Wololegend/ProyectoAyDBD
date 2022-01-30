@@ -18,9 +18,9 @@
 9. [Los usuarios No Básicos **juegan a videojuegos online** entre ellos](#juegaonline)
 10. [Comprobar la inserción en **Basico y No_Basico**](#checkbasicoinsert)
 11. [Comprobar la inserción en **Externo y De_Indev**](#checkexternoinsert)
-11. [Comprobar la inserción en Copia_Fisica](#checkcpfinsert)
-11. [Comprobar la inserción en Juega1 y Juega2](#checkjuega1insert)
-11. [Actualizar la cuenta de títulos por categoría](#checkcategoriainsert)
+12. [Comprobar la inserción en Copia_Fisica](#checkcpfinsert)
+13. [Comprobar la inserción en Juega1 y Juega2](#checkjuega1insert)
+14. [Actualizar la cuenta de títulos por categoría](#checkcategoriainsert)
 
 
 ### **Tablas para almacenar Usuarios** <a name="usuarios"/>
