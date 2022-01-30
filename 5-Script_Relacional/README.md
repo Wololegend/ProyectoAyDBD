@@ -18,7 +18,9 @@
 9. [Los usuarios No Básicos **juegan a videojuegos online** entre ellos](#juegaonline)
 10. [Comprobar la inserción en **Basico y No_Basico**](#checkbasicoinsert)
 11. [Comprobar la inserción en **Externo y De_Indev**](#checkexternoinsert)
-
+11. [Comprobar la inserción en Copia_Fisica](#checkcpfinsert)
+11. [Comprobar la inserción en Juega1 y Juega2](#checkjuega1insert)
+11. [Actualizar la cuenta de títulos por categoría](#checkcategoriainsert)
 
 
 ### **Tablas para almacenar Usuarios** <a name="usuarios"/>
@@ -184,7 +186,7 @@ Y triggers para evitar la inserción de videojuegos que no estén en **Videojueg
 ![Error_Externo_EstaEn_Videojuego_Trigger](img/2022-01-30-12-38-15.png)
 
 
-### **Comprobar la inserción en Copia_Fisica** <a name="checkcategoriainsert"/>
+### **Comprobar la inserción en Copia_Fisica** <a name="checkcpfinsert"/>
 Como se comentó anteriormente, sólamente los usuarios No Básicos cuyo tipo sea _Deluxe_ pueden recibir copias físicas de videojuegos. Esto se comprueba mediante el trigger **Check_CpFisica_Insert**:
 
 ![Check_CpFisica_Insert](img/2022-01-30-12-55-44.png)
@@ -197,3 +199,34 @@ Para comprobar el funcionamiento del trigger se realizan una serie de insercione
 
 ![Error_Check_CpFisica_Insert](img/2022-01-30-12-58-05.png)
 
+
+### **Comprobar la inserción en Juega1 y Juega2** <a name="checkjuega1insert"/>
+Para mantener la condición de exclusión se estableció en el modelo que los usuarios Básicos sólo pueden jugar a videojuegos Externos o De_Indev de tipo _Reciente_, teniendo que elegir entre uno de estas categorías; y siendo el primer videojuego al que jugasen el que la definiría.
+
+Esto se lograba estableciendo dos tablas (**Juega1 y Juega2**). La primera contiene sólo videojuegos Externos, y la segunda sólo De Indev. Para mantener la condición de exclusividad se debe comprobar que, a la hora de insertar datos en cualquiera de las dos tablas, no haya usuarios duplicados. Mediante los triggers **Check_Juega1_Insert** y **Check_Juega2_Insert** se consigue.
+
+![Check_Juega1_Insert](img/.png)
+
+![Check_Juega2_Insert](img/2022-01-30-13-04-07.png)
+
+Ambos disparadores hacen lo mismo: Comprueban que el usuario introducido no se encuentra en la tabla contraria y, si está, lanza un mensaje de error.
+
+Para comprobar el funcionamiento de los triggers se realizan inserciones erróneas.
+
+![Insert_Check_Juega1_Insert](img/2022-01-30-13-06-36.png)
+
+![Error_Check_Juega1_Insert](img/2022-01-30-13-07-58.png)
+
+
+### **Actualizar la cuenta de títulos por categoría** <a name="checkcategoriainsert"/>
+Al asignarle nuevas categorías a vieojuegos mediante la tabla **Pertenece** se debe de actualizar la cuenta de títulos por categoría de la tabla **Categoria**. Esto se consigue mediante el trigger **Actualiza_Categoria_Trigger**.
+
+![Actualiza_Categoria_Trigger](img/2022-01-30-13-12-11.png)
+
+Al introducir un nuevo registro en la tabla **Pertenece** se cuenta el número de filas con el nombre de la categoría que se ha utilizado para la inserción, y se actualiza la tabla categoría estableciendo en el registro de la categoría de la inserción el atributo _Num_Titulos_ al valor de la cuenta hecha previamente.
+
+Se realizan inserciones para comprobar que el atributo de la tabla **Categoria** se actualiza correctamente.
+
+![Insert_Actualiza_Categoria_Trigger](img/2022-01-30-13-17-40.png)
+
+![Select_Actualiza_Categoria_Trigger](img/2022-01-30-13-17-57.png)
