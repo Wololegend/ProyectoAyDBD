@@ -1,4 +1,19 @@
 -- -----------------------------------------------------
+-- DISEÑO DEL SISTEMA DE INFORMACIÓN (DSI).
+-- BASES DE DATOS.
+--
+-- PROYECTO: Servicio de subscripción de Indev.
+-- Ref: SCRIPT
+--
+-- Autores:
+--      Jaime Simeón Palomar Blumenthal   alu0101228587
+--      Alberto Cruz Luis                 alu0101217734
+--      Cristo García González            alu0101204512
+--      Antonella Sofía García Álvarez    alu0101227610
+-- -----------------------------------------------------
+
+
+-- -----------------------------------------------------
 -- Tabla Usuario
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS Usuario CASCADE;
@@ -621,8 +636,6 @@ WHERE Email = 'usuarioTest1@gmail.com';
 -- Las categorías de usuarios son excluyentes.
 -- Es decir, un usuario BASICO no puede ser NO_BASICO.
 -- -----------------------------------------------------
-
-
 DROP FUNCTION IF EXISTS NoBasico_Insert() CASCADE;
 
 CREATE FUNCTION NoBasico_Insert() RETURNS TRIGGER AS $$
@@ -641,11 +654,7 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER Check_NoBasico_Insert 
 BEFORE INSERT ON No_Basico FOR EACH ROW EXECUTE PROCEDURE NoBasico_Insert();
 
-
-
 -- Tests para el trigger --
-
-
 INSERT INTO Usuario (Email, Contraseña, Nombre, Imagen)
 VALUES ('usuarioTest2@gmail.com', 'contraseña', 'UsuarioTest2', NULL);
 
