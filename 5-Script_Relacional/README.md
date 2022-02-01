@@ -17,10 +17,11 @@
 8. [Los usuarios No Básicos **juegan** a videojuegos](#jueganobasico)
 9. [Los usuarios No Básicos **juegan a videojuegos online** entre ellos](#juegaonline)
 10. [Comprobar la inserción en **Basico y No_Basico**](#checkbasicoinsert)
-11. [Comprobar la inserción en **Externo y De_Indev**](#checkexternoinsert)
-12. [Comprobar la inserción en Copia_Fisica](#checkcpfinsert)
-13. [Comprobar la inserción en Juega1 y Juega2](#checkjuega1insert)
-14. [Actualizar la cuenta de títulos por categoría](#checkcategoriainsert)
+11. [Inserción de Usuarios en Basico y No_Basico](#insercionusuarios)
+12. [Comprobar la inserción en **Externo y De_Indev**](#checkexternoinsert)
+13. [Comprobar la inserción en Copia_Fisica](#checkcpfinsert)
+14. [Comprobar la inserción en Juega1 y Juega2](#checkjuega1insert)
+15. [Actualizar la cuenta de títulos por categoría](#checkcategoriainsert)
 
 
 ### **Tablas para almacenar Usuarios** <a name="usuarios"/>
@@ -153,15 +154,33 @@ Para comprobar su funcionamiento se trata de insertar datos erróneos duplicados
 
 Además, también se modelizó que todos los usuarios de **Basico** y **No_Basico** debían estar en **Usuario**. Esto se comprueba en la inserción de ambas subtablas por los triggers **Basico_EstaEn_Usuario_Trigger* y **NoBasico_EstaEn_Usuario_Trigger**.
 
-![Basico_EstaEn_Usuario_Trigger](img/2022-01-30-12-20-36.png)
+![Basico_EstaEn_Usuario](img/2022-02-01-13-30-40.png)
 
-Sendos triggers realizan las mismas acciones, descritas en la función **EstaEn_Usuario**: Comprueban si el Email insertado está en la lista de los de la tabla **Usuario**, y si no lo está lanza un mensaje de error.
+![Premium_EstaEn_Usuario](img/2022-02-01-13-29-43.png)
+
+![Deluxe_EstaEn_Usuario](img/2022-02-01-13-30-19.png)
+
+Todos estos triggers realizan las mismas acciones: Comprueban si el Email insertado está en la lista de los de la tabla **Usuario** (comprobando en cada caso el pago que realizan para situarlos en su correspondiente tabla), y si no lo está lanza un mensaje de error.
 
 Para comprobar su funcionamiento se trata de insertar usuarios nuevos directamente en **Basico** y **No_Basico**.
 
 ![Insert_Basico_EstaEn_Usuario_Trigger](img/2022-01-30-12-22-57.png)
 
 ![Error_Basico_EstaEn_Usuario_Trigger](img/2022-01-30-12-23-26.png)
+
+
+### **Inserción de Usuarios en Basico y No_Basico** <a name="insercionusuarios"/>
+Se requiere que, al insertar un usuario en Usuario se compruebe si es Básico, Premium o Deluxe según el pago de su subscripción. Esto lo realiza el trigger **Inserta_Usuario_Trigger**.
+
+![Inserta_Usuario_Trigger](img/2022-02-01-10-38-31.png)
+
+Si el pago es nulo, inserta al usuario en **Basico**, si está entre 1 y 10 en **No_Basico** con el atributo _Tipo_ 'Premium', y a partir de 11 con _Tipo_ 'Deluxe'.
+
+Se realiza la inserción de 3 usuarios de los diferentes tipos para comprobar que el trigger funciona.
+
+![Insert_Inserta_Usuario_Trigger](img/2022-02-01-13-06-18.png)
+
+![Output_Inserta_Usuario_Trigger](img/2022-02-01-13-15-26.png)
 
 
 ### **Comprobar la inserción en Externo y De_Indev** <a name="checkexternoinsert"/>

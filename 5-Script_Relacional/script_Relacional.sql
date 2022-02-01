@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS Usuario (
     Contraseña VARCHAR(45) NOT NULL,
     Nombre VARCHAR(45) NOT NULL UNIQUE,
     Imagen BYTEA NULL,
+    Pago INTEGER NULL CHECK (Pago > 0),
 
     PRIMARY KEY (Email)
 );
@@ -590,8 +591,6 @@ FROM Basico
 WHERE Email = 'usuarioTest1@gmail.com';
 
 
-
-
 -- -----------------------------------------------------
 -- Función y Trigger NoBasico_Insert
 -- Las categorías de usuarios son excluyentes.
@@ -637,18 +636,19 @@ WHERE Email = 'usuarioTest2@gmail.com';
 
 
 -- -----------------------------------------------------
--- Función y Trigger EstaEn_Usuario
+-- Función y Trigger Basico_EstaEn_Usuario
 -- Todos los usuarios de las relaciones BASICO y
 -- NO_BASICO tienen que estar en USUARIO.
 -- -----------------------------------------------------
-DROP FUNCTION IF EXISTS EstaEn_Usuario() CASCADE;
+DROP FUNCTION IF EXISTS Basico_EstaEn_Usuario() CASCADE;
 
-CREATE FUNCTION EstaEn_Usuario() RETURNS TRIGGER AS $$
+CREATE FUNCTION Basico_EstaEn_Usuario() RETURNS TRIGGER AS $$
     BEGIN
         IF (NEW.Email NOT IN (SELECT Email
-                              FROM Usuario)) THEN
+                              FROM Usuario
+                              WHERE Pago IS NULL)) THEN
             RAISE 'Usuario no admitido.'
-            USING HINT = 'Todos los usuarios tienen que estar en la tabla Usuarios antes que en cualquier otra.';
+            USING HINT = 'Todos los usuarios tienen que estar en la tabla Usuarios con su Pago indicado antes que en cualquier otra.';
         END IF;
 
         RETURN NEW;
@@ -656,25 +656,155 @@ CREATE FUNCTION EstaEn_Usuario() RETURNS TRIGGER AS $$
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER Basico_EstaEn_Usuario_Trigger 
-BEFORE INSERT ON Basico FOR EACH ROW EXECUTE PROCEDURE EstaEn_Usuario();
-
-CREATE TRIGGER NoBasico_EstaEn_Usuario_Trigger 
-BEFORE INSERT ON No_Basico FOR EACH ROW EXECUTE PROCEDURE EstaEn_Usuario();
+BEFORE INSERT ON Basico FOR EACH ROW EXECUTE PROCEDURE Premium_EstaEn_Usuario();
 
 -- Tests para el trigger --
 INSERT INTO Basico (Email, Contraseña, Nombre, Imagen)
 VALUES ('usuarioTest3@gmail.com', 'contraseña', 'UsuarioTest3', NULL);
 
-INSERT INTO No_Basico (Email, Contraseña, Nombre, Imagen, Tipo)
-VALUES ('usuarioTest3@gmail.com', 'contraseña', 'UsuarioTest3', NULL, 'Premium');
-
 SELECT *
 FROM Basico
 WHERE Email = 'usuarioTest3@gmail.com';
 
+DELETE FROM Basico
+WHERE Email = 'usuarioTest3@gmail.com';
+
+
+-- -----------------------------------------------------
+-- Función y Trigger Premium_EstaEn_Usuario
+-- Todos los usuarios de las relaciones BASICO y
+-- NO_BASICO tienen que estar en USUARIO.
+-- -----------------------------------------------------
+DROP FUNCTION IF EXISTS Premium_EstaEn_Usuario() CASCADE;
+
+CREATE FUNCTION Premium_EstaEn_Usuario() RETURNS TRIGGER AS $$
+    BEGIN
+        IF (NEW.Email NOT IN (SELECT Email
+                              FROM Usuario
+                              WHERE Pago >= 1 AND Pago <= 10)) THEN
+            RAISE 'Usuario no admitido.'
+            USING HINT = 'Todos los usuarios tienen que estar en la tabla Usuarios con su Pago indicado antes que en cualquier otra.';
+        END IF;
+
+        RETURN NEW;
+	END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER NoBasico_EstaEn_Usuario_Trigger 
+BEFORE INSERT ON No_Basico FOR EACH ROW EXECUTE PROCEDURE Premium_EstaEn_Usuario();
+
+-- Tests para el trigger --
+INSERT INTO No_Basico (Email, Contraseña, Nombre, Imagen, Tipo)
+VALUES ('usuarioTest3A@gmail.com', 'contraseña', 'UsuarioTest3', NULL, 'Premium');
+
 SELECT *
 FROM No_Basico
-WHERE Email = 'usuarioTest3@gmail.com';
+WHERE Email = 'usuarioTest3A@gmail.com';
+
+DELETE FROM No_Basico
+WHERE Email = 'usuarioTest3A@gmail.com';
+
+
+-- -----------------------------------------------------
+-- Función y Trigger Deluxe_EstaEn_Usuario
+-- Todos los usuarios de las relaciones BASICO y
+-- NO_BASICO tienen que estar en USUARIO.
+-- -----------------------------------------------------
+DROP FUNCTION IF EXISTS Deluxe_EstaEn_Usuario() CASCADE;
+
+CREATE FUNCTION Deluxe_EstaEn_Usuario() RETURNS TRIGGER AS $$
+    BEGIN
+        IF (NEW.Email NOT IN (SELECT Email
+                              FROM Usuario
+                              WHERE Pago >= 11)) THEN
+            RAISE 'Usuario no admitido.'
+            USING HINT = 'Todos los usuarios tienen que estar en la tabla Usuarios con su Pago indicado antes que en cualquier otra.';
+        END IF;
+
+        RETURN NEW;
+	END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER Deluxe_EstaEn_Usuario 
+BEFORE INSERT ON No_Basico FOR EACH ROW EXECUTE PROCEDURE Deluxe_EstaEn_Usuario();
+
+-- Tests para el trigger --
+INSERT INTO No_Basico (Email, Contraseña, Nombre, Imagen, Tipo)
+VALUES ('usuarioTest3B@gmail.com', 'contraseña', 'UsuarioTest3', NULL, 'Deluxe');
+
+SELECT *
+FROM No_Basico
+WHERE Email = 'usuarioTest3B@gmail.com';
+
+DELETE FROM No_Basico
+WHERE Email = 'usuarioTest3B@gmail.com';
+
+
+-- -----------------------------------------------------
+-- Función y Trigger Inserta_Usuario
+-- El campo Pago de la relación USUARIO define el tipo
+-- de suscripción de cada usuario: Un valor nulo indica
+-- que el usuario es Básico, de 1 a 10 de No Básico con
+-- Tipo ‘Premium’, y de 11 en adelante No Básico de
+-- Tipo ‘Deluxe’.
+-- -----------------------------------------------------
+DROP FUNCTION IF EXISTS Inserta_Usuario() CASCADE;
+
+CREATE FUNCTION Inserta_Usuario() RETURNS TRIGGER AS $$
+    BEGIN
+        IF (NEW.Pago IS NULL) THEN
+            INSERT INTO Basico (Email, Contraseña, Nombre, Imagen)
+            VALUES (NEW.Email, NEW.Contraseña, NEW.Nombre, NEW.Imagen);
+        END IF;
+
+        IF (NEW.Pago >= 1 AND NEW.Pago <= 10) THEN
+            INSERT INTO No_Basico (Email, Contraseña, Nombre, Imagen, Tipo)
+            VALUES (NEW.Email, NEW.Contraseña, NEW.Nombre, NEW.Imagen, 'Premium');
+        END IF;
+
+        IF (NEW.Pago >= 11) THEN
+            INSERT INTO No_Basico (Email, Contraseña, Nombre, Imagen, Tipo)
+            VALUES (NEW.Email, NEW.Contraseña, NEW.Nombre, NEW.Imagen, 'Deluxe');
+        END IF;
+
+        RETURN NEW;
+	END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER Inserta_Usuario_Trigger
+AFTER INSERT ON Usuario FOR EACH ROW EXECUTE PROCEDURE Inserta_Usuario();
+
+
+-- Tests para el trigger --
+INSERT INTO Usuario (Email, Contraseña, Nombre, Imagen, Pago)
+VALUES ('usuarioTestA@gmail.com', 'contraseña', 'UsuarioTestA', NULL, NULL);
+
+INSERT INTO Usuario (Email, Contraseña, Nombre, Imagen, Pago)
+VALUES ('usuarioTestB@gmail.com', 'contraseña', 'UsuarioTestB', NULL, 5);
+
+INSERT INTO Usuario (Email, Contraseña, Nombre, Imagen, Pago)
+VALUES ('usuarioTestC@gmail.com', 'contraseña', 'UsuarioTestC', NULL, 20);
+
+SELECT *
+FROM Usuario
+WHERE (Email IN ('usuarioTestA@gmail.com', 'usuarioTestB@gmail.com', 'usuarioTestC@gmail.com'));
+
+SELECT *
+FROM Basico
+WHERE (Email = 'usuarioTestA@gmail.com');
+
+SELECT *
+FROM No_Basico
+WHERE (Email IN ('usuarioTestB@gmail.com', 'usuarioTestC@gmail.com'));
+
+DELETE FROM Usuario
+WHERE Email IN  ('usuarioTestA@gmail.com', 'usuarioTestB@gmail.com', 'usuarioTestC@gmail.com');
+
+DELETE FROM Basico
+WHERE Email = 'usuarioTestA@gmail.com';
+
+DELETE FROM No_Basico
+WHERE Email IN ('usuarioTestB@gmail.com', 'usuarioTestC@gmail.com');
 
 
 -- -----------------------------------------------------
@@ -702,11 +832,8 @@ CREATE TRIGGER Check_CpFisica_Insert
 BEFORE INSERT ON Copia_Fisica EXECUTE PROCEDURE CpFisica_Insert();
 
 -- Tests para el trigger --
-INSERT INTO Usuario (Email, Contraseña, Nombre, Imagen)
-VALUES ('usuarioTest4@gmail.com', 'contraseña', 'UsuarioTest4', NULL);
-
-INSERT INTO No_Basico (Email, Contraseña, Nombre, Imagen, Tipo)
-VALUES ('usuarioTest4@gmail.com', 'contraseña', 'UsuarioTest4', NULL, 'Premium');
+INSERT INTO Usuario (Email, Contraseña, Nombre, Imagen, Pago)
+VALUES ('usuarioTest4@gmail.com', 'contraseña', 'UsuarioTest4', NULL, 5);
 
 INSERT INTO Copia_Fisica (Serial, Email_NoBasico, Distribuidora, Nombre_Videojuego, Año)
 VALUES (6, 'usuarioTest4@gmail.com', 'Xbox Game Studios', 'Age of Empires IV', 'Oct-28-2021');
@@ -886,9 +1013,6 @@ BEFORE INSERT ON Juega1 FOR EACH ROW EXECUTE PROCEDURE Juega1_Insert();
 INSERT INTO Usuario (Email, Contraseña, Nombre, Imagen)
 VALUES ('usuarioTest4@gmail.com', 'contraseña', 'UsuarioTest4', NULL);
 
-INSERT INTO Basico (Email, Contraseña, Nombre, Imagen)
-VALUES ('usuarioTest4@gmail.com', 'contraseña', 'UsuarioTest4', NULL);
-
 INSERT INTO Videojuego (Distribuidora, Nombre, Año, PEGI)
 VALUES ('DistTest1', 'VideojuegoTest1', 'Jan-01-2000', NULL);
 
@@ -957,10 +1081,7 @@ BEFORE INSERT ON Juega2 FOR EACH ROW EXECUTE PROCEDURE Juega2_Insert();
 
 -- Tests para probar el trigger --
 INSERT INTO Usuario (Email, Contraseña, Nombre, Imagen)
-VALUES ('usuarioTest5@gmail.com', 'contraseña', 'UsuarioTest4', NULL);
-
-INSERT INTO Basico (Email, Contraseña, Nombre, Imagen)
-VALUES ('usuarioTest5@gmail.com', 'contraseña', 'UsuarioTest4', NULL);
+VALUES ('usuarioTest5A@gmail.com', 'contraseña', 'UsuarioTest4', NULL);
 
 INSERT INTO Videojuego (Distribuidora, Nombre, Año, PEGI)
 VALUES ('DistTest3', 'VideojuegoTest3', 'Jan-01-2000', NULL);
@@ -975,20 +1096,20 @@ INSERT INTO De_Indev (Distribuidora, Nombre, Año, PEGI, Tipo)
 VALUES ('DistTest4', 'VideojuegoTest4', 'Feb-01-2000', NULL, 'No Reciente');
 
 INSERT INTO Juega1 (Email_Basico, Distribuidora, Nombre_Externo, Año)
-VALUES ('usuarioTest5@gmail.com', 'DistTest3', 'VideojuegoTest3', 'Jan-01-2000');
+VALUES ('usuarioTest5A@gmail.com', 'DistTest3', 'VideojuegoTest3', 'Jan-01-2000');
 
 INSERT INTO Juega2 (Email_Basico, Distribuidora, Nombre_DeIndev, Año)
-VALUES ('usuarioTest5@gmail.com', 'DistTest4', 'VideojuegoTest4', 'Feb-01-2000');
+VALUES ('usuarioTest5A@gmail.com', 'DistTest4', 'VideojuegoTest4', 'Feb-01-2000');
 
 SELECT *
 FROM Juega2
-WHERE Email_Basico = 'usuarioTest5@gmail.com';
+WHERE Email_Basico = 'usuarioTest5A@gmail.com';
 
 DELETE FROM Usuario
-WHERE Email = 'usuarioTest5@gmail.com';
+WHERE Email = 'usuarioTest5A@gmail.com';
 
 DELETE FROM Basico
-WHERE Email = 'usuarioTest5@gmail.com';
+WHERE Email = 'usuarioTest5A@gmail.com';
 
 DELETE FROM Videojuego
 WHERE Distribuidora = 'DistTest3';
