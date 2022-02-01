@@ -83,6 +83,7 @@ CREATE TABLE IF NOT EXISTS Videojuego (
     Nombre VARCHAR(45) NOT NULL,
     Año DATE NOT NULL CHECK (Año > 'Jan-01-1950' AND Año < CURRENT_DATE),
     PEGI INT NULL CHECK (PEGI IN (3, 7, 12, 16, 18)),
+    Desarrolladora VARCHAR(45) NULL,
 
     PRIMARY KEY (Distribuidora, Nombre, Año)
 );
@@ -671,17 +672,17 @@ WHERE Email = 'usuarioTest3@gmail.com';
 
 
 -- -----------------------------------------------------
--- Función y Trigger Premium_EstaEn_Usuario
+-- Función y Trigger NoBasico_EstaEn_Usuario
 -- Todos los usuarios de las relaciones BASICO y
 -- NO_BASICO tienen que estar en USUARIO.
 -- -----------------------------------------------------
-DROP FUNCTION IF EXISTS Premium_EstaEn_Usuario() CASCADE;
+DROP FUNCTION IF EXISTS NoBasico_EstaEn_Usuario() CASCADE;
 
-CREATE FUNCTION Premium_EstaEn_Usuario() RETURNS TRIGGER AS $$
+CREATE FUNCTION NoBasico_EstaEn_Usuario() RETURNS TRIGGER AS $$
     BEGIN
         IF (NEW.Email NOT IN (SELECT Email
                               FROM Usuario
-                              WHERE Pago >= 1 AND Pago <= 10)) THEN
+                              WHERE Pago >= 1)) THEN
             RAISE 'Usuario no admitido.'
             USING HINT = 'Todos los usuarios tienen que estar en la tabla Usuarios con su Pago indicado antes que en cualquier otra.';
         END IF;
@@ -691,7 +692,7 @@ CREATE FUNCTION Premium_EstaEn_Usuario() RETURNS TRIGGER AS $$
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER NoBasico_EstaEn_Usuario_Trigger 
-BEFORE INSERT ON No_Basico FOR EACH ROW EXECUTE PROCEDURE Premium_EstaEn_Usuario();
+BEFORE INSERT ON No_Basico FOR EACH ROW EXECUTE PROCEDURE NoBasico_EstaEn_Usuario();
 
 -- Tests para el trigger --
 INSERT INTO No_Basico (Email, Contraseña, Nombre, Imagen, Tipo)
@@ -703,41 +704,6 @@ WHERE Email = 'usuarioTest3A@gmail.com';
 
 DELETE FROM No_Basico
 WHERE Email = 'usuarioTest3A@gmail.com';
-
-
--- -----------------------------------------------------
--- Función y Trigger Deluxe_EstaEn_Usuario
--- Todos los usuarios de las relaciones BASICO y
--- NO_BASICO tienen que estar en USUARIO.
--- -----------------------------------------------------
-DROP FUNCTION IF EXISTS Deluxe_EstaEn_Usuario() CASCADE;
-
-CREATE FUNCTION Deluxe_EstaEn_Usuario() RETURNS TRIGGER AS $$
-    BEGIN
-        IF (NEW.Email NOT IN (SELECT Email
-                              FROM Usuario
-                              WHERE Pago >= 11)) THEN
-            RAISE 'Usuario no admitido.'
-            USING HINT = 'Todos los usuarios tienen que estar en la tabla Usuarios con su Pago indicado antes que en cualquier otra.';
-        END IF;
-
-        RETURN NEW;
-	END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER Deluxe_EstaEn_Usuario 
-BEFORE INSERT ON No_Basico FOR EACH ROW EXECUTE PROCEDURE Deluxe_EstaEn_Usuario();
-
--- Tests para el trigger --
-INSERT INTO No_Basico (Email, Contraseña, Nombre, Imagen, Tipo)
-VALUES ('usuarioTest3B@gmail.com', 'contraseña', 'UsuarioTest3', NULL, 'Deluxe');
-
-SELECT *
-FROM No_Basico
-WHERE Email = 'usuarioTest3B@gmail.com';
-
-DELETE FROM No_Basico
-WHERE Email = 'usuarioTest3B@gmail.com';
 
 
 -- -----------------------------------------------------
@@ -757,7 +723,7 @@ CREATE FUNCTION Inserta_Usuario() RETURNS TRIGGER AS $$
             VALUES (NEW.Email, NEW.Contraseña, NEW.Nombre, NEW.Imagen);
         END IF;
 
-        IF (NEW.Pago >= 1 AND NEW.Pago <= 10) THEN
+        IF (NEW.Pago >= 1 OR NEW.Pago <= 10) THEN
             INSERT INTO No_Basico (Email, Contraseña, Nombre, Imagen, Tipo)
             VALUES (NEW.Email, NEW.Contraseña, NEW.Nombre, NEW.Imagen, 'Premium');
         END IF;
@@ -782,9 +748,6 @@ VALUES ('usuarioTestA@gmail.com', 'contraseña', 'UsuarioTestA', NULL, NULL);
 INSERT INTO Usuario (Email, Contraseña, Nombre, Imagen, Pago)
 VALUES ('usuarioTestB@gmail.com', 'contraseña', 'UsuarioTestB', NULL, 5);
 
-INSERT INTO Usuario (Email, Contraseña, Nombre, Imagen, Pago)
-VALUES ('usuarioTestC@gmail.com', 'contraseña', 'UsuarioTestC', NULL, 20);
-
 SELECT *
 FROM Usuario
 WHERE (Email IN ('usuarioTestA@gmail.com', 'usuarioTestB@gmail.com', 'usuarioTestC@gmail.com'));
@@ -795,10 +758,10 @@ WHERE (Email = 'usuarioTestA@gmail.com');
 
 SELECT *
 FROM No_Basico
-WHERE (Email IN ('usuarioTestB@gmail.com', 'usuarioTestC@gmail.com'));
+WHERE (Email = 'usuarioTestB@gmail.com');
 
 DELETE FROM Usuario
-WHERE Email IN  ('usuarioTestA@gmail.com', 'usuarioTestB@gmail.com', 'usuarioTestC@gmail.com');
+WHERE Email IN  ('usuarioTestA@gmail.com', 'usuarioTestB@gmail.com');
 
 DELETE FROM Basico
 WHERE Email = 'usuarioTestA@gmail.com';
@@ -943,21 +906,22 @@ WHERE Distribuidora = 'DistTest';
 
 
 -- -----------------------------------------------------
--- Función y Trigger EstaEn_Videojuego
--- Todos los usuarios de las relaciones EXTERNO y
--- DE_INDEV tienen que estar en VIDEOJUEGO.
+-- Función y Trigger Externo_EstaEn_Videojuego
+-- Todos los Videojuegos de las relaciones EXTERNO y
+-- DE_INDEV tienen que estar en VIDOEJUEGO.
 -- -----------------------------------------------------
-DROP FUNCTION IF EXISTS EstaEn_Videojuego() CASCADE;
+DROP FUNCTION IF EXISTS Externo_EstaEn_Videojuego() CASCADE;
 
-CREATE FUNCTION EstaEn_Videojuego() RETURNS TRIGGER AS $$
+CREATE FUNCTION Externo_EstaEn_Videojuego() RETURNS TRIGGER AS $$
     BEGIN
         IF ((SELECT Nombre
-             FROM Videojuego
-             WHERE (Distribuidora = NEW.Distribuidora AND
-                    Nombre = NEW.Nombre AND
-                    Año = NEW.Año)) IS NULL) THEN
+            FROM Videojuego
+            WHERE Distribuidora = NEW.Distribuidora AND
+                  Año = NEW.Año AND
+                  Nombre = NEW.Nombre AND
+                  Desarrolladora = NEW.Desarrolladora) IS NULL) THEN
             RAISE 'Videojuego no admitido.'
-            USING HINT = 'Todos los videojuegos tienen que estar en la tabla Videojuegos antes que en cualquier otra.';
+            USING HINT = 'Todos los videojuegos tienen que estar en la tabla Videojuegos con su Desarrolladora indicada antes que en cualquier otra.';
         END IF;
 
         RETURN NEW;
@@ -965,25 +929,121 @@ CREATE FUNCTION EstaEn_Videojuego() RETURNS TRIGGER AS $$
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER Externo_EstaEn_Videojuego_Trigger 
-BEFORE INSERT ON Externo FOR EACH ROW EXECUTE PROCEDURE EstaEn_Videojuego();
-
-CREATE TRIGGER DeIndev_EstaEn_Videojuego_Trigger 
-BEFORE INSERT ON De_Indev FOR EACH ROW EXECUTE PROCEDURE EstaEn_Videojuego();
+BEFORE INSERT ON Externo FOR EACH ROW EXECUTE PROCEDURE Externo_EstaEn_Videojuego();
 
 -- Tests para el trigger --
-INSERT INTO Externo (Distribuidora, Nombre, Año, PEGI, Desarrolladora)
-VALUES ('DistTest1', 'VideojuegoTest1', 'Jan-01-2000', NULL, 'DesTest');
-
-INSERT INTO De_Indev (Distribuidora, Nombre, Año, PEGI, Tipo)
-VALUES ('DistTest2', 'VideojuegoTest2', 'Feb-01-2000', NULL, 'No Reciente');
+INSERT INTO Externo (Desarrolladora, Distribuidora, Nombre, Año)
+VALUES ('DesTest', 'DisTest', 'JuegoTest', 'Jan-01-00');
 
 SELECT *
 FROM Externo
-WHERE Distribuidora = 'DistTest1';
+WHERE Desarrolladora = 'DesTest';
+
+DELETE FROM Externo
+WHERE Desarrolladora = 'DesTest';
+
+
+-- -----------------------------------------------------
+-- Función y Trigger DeIndev_EstaEn_Videojuego
+-- Todos los Videojuegos de las relaciones EXTERNO y
+-- DE_INDEV tienen que estar en VIDOEJUEGO.
+-- -----------------------------------------------------
+DROP FUNCTION IF EXISTS DeIndev_EstaEn_Videojuego() CASCADE;
+
+CREATE FUNCTION DeIndev_EstaEn_Videojuego() RETURNS TRIGGER AS $$
+    BEGIN
+        IF ((SELECT Nombre
+            FROM Videojuego
+            WHERE Distribuidora = NEW.Distribuidora AND
+                  Año = NEW.Año AND
+                  Nombre = NEW.Nombre AND
+                  Desarrolladora IS NULL) IS NULL) THEN
+            RAISE 'Videojuego no admitido.'
+            USING HINT = 'Todos los videojuegos tienen que estar en la tabla Videojuegos con su Desarrolladora indicada antes que en cualquier otra.';
+        END IF;
+
+        RETURN NEW;
+	END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER DeIndev_EstaEn_Videojuego_Trigger 
+BEFORE INSERT ON De_Indev FOR EACH ROW EXECUTE PROCEDURE DeIndev_EstaEn_Videojuego();
+
+-- Tests para el trigger --
+INSERT INTO De_Indev (Distribuidora, Nombre, Año)
+VALUES ('DisTest', 'JuegoTest', 'Jan-01-00');
 
 SELECT *
 FROM De_Indev
-WHERE Distribuidora = 'DistTest2';
+WHERE Distribuidora = 'DistTest';
+
+DELETE FROM De_Indev
+WHERE Distribuidora = 'DistTest';
+
+
+-- -----------------------------------------------------
+-- Función y Trigger Inserta_Videojuego
+-- El campo Desarrolladora de Videojuego indica si es
+-- un juego Externo o De Indev, y su Año de lanzamiento
+-- si es reciente o no.
+-- -----------------------------------------------------
+DROP FUNCTION IF EXISTS Inserta_Videojuego() CASCADE;
+
+CREATE FUNCTION Inserta_Videojuego() RETURNS TRIGGER AS $$
+    BEGIN
+        IF (NEW.Desarrolladora IS NULL) THEN
+            IF (CURRENT_DATE - NEW.Año <= 30) THEN
+                INSERT INTO De_Indev (Distribuidora, Nombre, Año, Tipo)
+                VALUES (NEW.Distribuidora, NEW.Nombre, NEW.Año, 'Reciente');
+
+            ELSE
+                INSERT INTO De_Indev (Distribuidora, Nombre, Año, Tipo)
+                VALUES (NEW.Distribuidora, NEW.Nombre, NEW.Año, 'No Reciente');
+            END IF;
+        ELSE
+            INSERT INTO Externo (Desarrolladora, Distribuidora, Nombre, Año)
+            VALUES (NEW.Desarrolladora, NEW.Distribuidora, NEW.Nombre, NEW.Año);
+        END IF;
+
+        RETURN NEW;
+	END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER Inserta_Videojuego_Trigger
+AFTER INSERT ON Videojuego FOR EACH ROW EXECUTE PROCEDURE Inserta_Videojuego();
+
+
+-- Tests para el trigger --
+INSERT INTO Videojuego (Desarrolladora, Distribuidora, Nombre, Año, PEGI)
+VALUES (NULL, 'DistTest', 'JuegoTestIndev', 'Jan-15-22', NULL);
+
+INSERT INTO Videojuego (Desarrolladora, Distribuidora, Nombre, Año, PEGI)
+VALUES (NULL, 'DistTest', 'JuegoTestIndev', '2000-01-01', NULL);
+
+INSERT INTO Videojuego (Desarrolladora, Distribuidora, Nombre, Año, PEGI)
+VALUES ('DesTest', 'DistTest', 'JuegoTestExterno', 'Jan-15-22', NULL);
+
+SELECT *
+FROM Videojuego
+WHERE (Distribuidora = 'DistTest');
+
+SELECT *
+FROM De_Indev
+WHERE (Distribuidora = 'DistTest');
+
+SELECT *
+FROM Externo
+WHERE (Distribuidora = 'DistTest');
+
+DELETE FROM Videojuego
+WHERE Distribuidora = 'DistTest';
+
+DELETE FROM Externo
+WHERE Distribuidora = 'DistTest';
+
+DELETE FROM De_Indev
+WHERE Distribuidora = 'DistTest';
+
 
 
 -- -----------------------------------------------------
@@ -1010,26 +1070,24 @@ CREATE TRIGGER Check_Juega1_Insert
 BEFORE INSERT ON Juega1 FOR EACH ROW EXECUTE PROCEDURE Juega1_Insert();
 
 -- Tests para probar el trigger --
-INSERT INTO Usuario (Email, Contraseña, Nombre, Imagen)
-VALUES ('usuarioTest4@gmail.com', 'contraseña', 'UsuarioTest4', NULL);
+INSERT INTO Usuario (Email, Contraseña, Nombre, Imagen, Pago)
+VALUES ('usuarioTest4@gmail.com', 'contraseña', 'UsuarioTest4', NULL, NULL);
 
-INSERT INTO Videojuego (Distribuidora, Nombre, Año, PEGI)
-VALUES ('DistTest1', 'VideojuegoTest1', 'Jan-01-2000', NULL);
+INSERT INTO Videojuego (Desarrolladora, Distribuidora, Nombre, Año, PEGI)
+VALUES (NULL, 'DistTest1', 'VideojuegoTest1', 'Jan-01-2000', NULL);
 
-INSERT INTO Videojuego (Distribuidora, Nombre, Año, PEGI)
-VALUES ('DistTest2', 'VideojuegoTest2', 'Feb-01-2000', NULL);
+INSERT INTO Videojuego (Desarrolladora, Distribuidora, Nombre, Año, PEGI)
+VALUES ('DesTest', 'DistTest2', 'VideojuegoTest2', 'Feb-01-2001', NULL);
 
-INSERT INTO Externo (Distribuidora, Nombre, Año, PEGI, Desarrolladora)
-VALUES ('DistTest1', 'VideojuegoTest1', 'Jan-01-2000', NULL, 'DesTest');
-
-INSERT INTO De_Indev (Distribuidora, Nombre, Año, PEGI, Tipo)
-VALUES ('DistTest2', 'VideojuegoTest2', 'Feb-01-2000', NULL, 'No Reciente');
+SELECT * FROM De_Indev;
 
 INSERT INTO Juega2 (Email_Basico, Distribuidora, Nombre_DeIndev, Año)
-VALUES ('usuarioTest4@gmail.com', 'DistTest2', 'VideojuegoTest2', 'Feb-01-2000');
+VALUES ('usuarioTest4@gmail.com', 'DistTest1', 'VideojuegoTest1', 'Jan-01-2000');
+
+SELECT * FROM Externo;
 
 INSERT INTO Juega1 (Email_Basico, Distribuidora, Nombre_Externo, Año)
-VALUES ('usuarioTest4@gmail.com', 'DistTest1', 'VideojuegoTest1', 'Jan-01-2000');
+VALUES ('usuarioTest4@gmail.com', 'DistTest2', 'VideojuegoTest2', 'Feb-01-2001');
 
 SELECT *
 FROM Juega1
@@ -1081,35 +1139,29 @@ BEFORE INSERT ON Juega2 FOR EACH ROW EXECUTE PROCEDURE Juega2_Insert();
 
 -- Tests para probar el trigger --
 INSERT INTO Usuario (Email, Contraseña, Nombre, Imagen)
-VALUES ('usuarioTest5A@gmail.com', 'contraseña', 'UsuarioTest4', NULL);
+VALUES ('usuarioTest5@gmail.com', 'contraseña', 'UsuarioTest4', NULL);
 
-INSERT INTO Videojuego (Distribuidora, Nombre, Año, PEGI)
-VALUES ('DistTest3', 'VideojuegoTest3', 'Jan-01-2000', NULL);
+INSERT INTO Videojuego (Desarrolladora, Distribuidora, Nombre, Año, PEGI)
+VALUES (NULL, 'DistTest3', 'VideojuegoTest3', 'Jan-01-2000', NULL);
 
-INSERT INTO Videojuego (Distribuidora, Nombre, Año, PEGI)
-VALUES ('DistTest4', 'VideojuegoTest4', 'Feb-01-2000', NULL);
-
-INSERT INTO Externo (Distribuidora, Nombre, Año, PEGI, Desarrolladora)
-VALUES ('DistTest3', 'VideojuegoTest3', 'Jan-01-2000', NULL, 'DesTest');
-
-INSERT INTO De_Indev (Distribuidora, Nombre, Año, PEGI, Tipo)
-VALUES ('DistTest4', 'VideojuegoTest4', 'Feb-01-2000', NULL, 'No Reciente');
+INSERT INTO Videojuego (Desarrolladora, Distribuidora, Nombre, Año, PEGI)
+VALUES ('DesTest', 'DistTest4', 'VideojuegoTest4', 'Feb-01-2000', NULL);
 
 INSERT INTO Juega1 (Email_Basico, Distribuidora, Nombre_Externo, Año)
-VALUES ('usuarioTest5A@gmail.com', 'DistTest3', 'VideojuegoTest3', 'Jan-01-2000');
+VALUES ('usuarioTest5@gmail.com', 'DistTest4', 'VideojuegoTest4', 'Feb-01-2000');
 
 INSERT INTO Juega2 (Email_Basico, Distribuidora, Nombre_DeIndev, Año)
-VALUES ('usuarioTest5A@gmail.com', 'DistTest4', 'VideojuegoTest4', 'Feb-01-2000');
+VALUES ('usuarioTest5@gmail.com', 'DistTest3', 'VideojuegoTest3', 'Jan-01-2000');
 
 SELECT *
 FROM Juega2
-WHERE Email_Basico = 'usuarioTest5A@gmail.com';
+WHERE Email_Basico = 'usuarioTest5@gmail.com';
 
 DELETE FROM Usuario
 WHERE Email = 'usuarioTest5A@gmail.com';
 
 DELETE FROM Basico
-WHERE Email = 'usuarioTest5A@gmail.com';
+WHERE Email = 'usuarioTest5@gmail.com';
 
 DELETE FROM Videojuego
 WHERE Distribuidora = 'DistTest3';
@@ -1149,23 +1201,23 @@ AFTER INSERT ON Pertenece FOR EACH ROW EXECUTE PROCEDURE Actualiza_Categoria();
 
 -- Tests para probar el trigger --
 INSERT INTO Videojuego (Distribuidora, Nombre, Año, PEGI)
-VALUES ('DistTest3', 'VideojuegoTest3', 'Jan-01-2000', NULL);
+VALUES ('DistTest6', 'VideojuegoTest6', 'Jan-01-2000', NULL);
 
 INSERT INTO Categoria (Nombre, Num_Titulos)
 VALUES ('CatTest', 0);
 
 INSERT INTO Pertenece (Distribuidora, Nombre_Videojuego, Año, Nombre_Categoria)
-VALUES ('DistTest3', 'VideojuegoTest3', 'Jan-01-2000', 'CatTest');
+VALUES ('DistTest6', 'VideojuegoTest6', 'Jan-01-2000', 'CatTest');
 
 SELECT *
 FROM Categoria
 WHERE Nombre = 'CatTest';
 
 DELETE FROM Pertenece
-WHERE Distribuidora = 'DistTest3';
+WHERE Distribuidora = 'DistTest6';
 
 DELETE FROM Categoria
 WHERE Nombre = 'CatTest';
 
 DELETE FROM Videojuego
-WHERE Distribuidora = 'DistTest3';
+WHERE Distribuidora = 'DistTest6';

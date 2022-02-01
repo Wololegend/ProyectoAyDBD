@@ -27,3 +27,5 @@ A continuación se describen brevemente los contenidos de cada directorio del re
 * **_4-Objeto_Relacional_**: Documento PDF con el informe donde se detallan todos los aspectos del modelo Objeto-Relacional aplicado a este proyecto, así como el propio modelo en formato PNG.
 
 * **_5-Script_Relacional_**: Documento PDF con el informe donde se incluyen las descripciones de las tablas, triggers y funciones; así como el propio script donde también se incluyen las inserciones de datos, y un README.md con una **descripción de la generación de código de componentes y procedimientos**.
+
+* **_6-Carga_de_Datos_**: Documento PDF con el informe donde se incluyen las diversas inserciones hechas en las tablas y los resultados obtenidos de estas.

@@ -152,22 +152,21 @@ Para comprobar su funcionamiento se trata de insertar datos erróneos duplicados
 
 ![Error_Check_Basico_Insert](img/2022-01-30-12-15-51.png)
 
-Además, también se modelizó que todos los usuarios de **Basico** y **No_Basico** debían estar en **Usuario**. Esto se comprueba en la inserción de ambas subtablas por los triggers **Basico_EstaEn_Usuario_Trigger* y **NoBasico_EstaEn_Usuario_Trigger**.
+Además, también se modelizó que todos los usuarios de **Basico** y **No_Basico** debían estar en **Usuario**. Esto se comprueba en la inserción de ambas subtablas por los triggers **Basico_EstaEn_Usuario_Trigger** y **NoBasico_EstaEn_Usuario_Trigger**.
 
 ![Basico_EstaEn_Usuario](img/2022-02-01-13-30-40.png)
 
-![Premium_EstaEn_Usuario](img/2022-02-01-13-29-43.png)
+![NoBasico_EstaEn_Usuario](img/2022-02-01-14-06-13.png)
 
-![Deluxe_EstaEn_Usuario](img/2022-02-01-13-30-19.png)
-
-Todos estos triggers realizan las mismas acciones: Comprueban si el Email insertado está en la lista de los de la tabla **Usuario** (comprobando en cada caso el pago que realizan para situarlos en su correspondiente tabla), y si no lo está lanza un mensaje de error.
+Sendos triggers realizan las mismas acciones: Comprueban si el Email insertado está en la lista de los de la tabla **Usuario** (comprobando en cada caso el pago que realizan para situarlos en su correspondiente tabla), y si no lo está lanza un mensaje de error.
 
 Para comprobar su funcionamiento se trata de insertar usuarios nuevos directamente en **Basico** y **No_Basico**.
 
-![Insert_Basico_EstaEn_Usuario_Trigger](img/2022-01-30-12-22-57.png)
+![Insert_Basico_EstaEn_Usuario_Trigger](img/2022-02-01-14-07-22.png)
 
-![Error_Basico_EstaEn_Usuario_Trigger](img/2022-01-30-12-23-26.png)
+![Insert_NoBasico_EstaEn_Usuario_Trigger](img/2022-02-01-16-25-58.png)
 
+![Error_Basico_EstaEn_Usuario_Trigger](img/2022-02-01-14-08-07.png)
 
 ### **Inserción de Usuarios en Basico y No_Basico** <a name="insercionusuarios"/>
 Se requiere que, al insertar un usuario en Usuario se compruebe si es Básico, Premium o Deluxe según el pago de su subscripción. Esto lo realiza el trigger **Inserta_Usuario_Trigger**.
@@ -198,11 +197,28 @@ Comprobaciones para que no se repitan datos entre las subtablas **Externo** y **
 
 Y triggers para evitar la inserción de videojuegos que no estén en **Videojuegos**, junto a sus respectivas inserciones "ilegales" para comprobar el funcionamiento de los procedimientos.
 
-![Externo_EstaEn_Videojuego_Trigger](img/2022-01-30-12-37-25.png)
+![Externo_EstaEn_Videojuego_Trigger](img/2022-02-01-16-30-16.png)
 
-![Insert_Externo_EstaEn_Videojuego_Trigger](img/2022-01-30-12-46-21.png)
+![DeIndev_EstaEn_Videojuego_Trigger](img/2022-02-01-16-30-51.png)
 
-![Error_Externo_EstaEn_Videojuego_Trigger](img/2022-01-30-12-38-15.png)
+![Insercion_DeIndev_EstaEn_Videojuego_Trigger](img/2022-02-01-16-31-15.png)
+
+![Error_DeIndev_EstaEn_Videojuego_Trigger](img/2022-02-01-16-31-52.png)
+
+
+### **Inserción de Videojuegos en Externo y De_Indev** <a name="insercionvideojuegos"/>
+
+Se requiere que, al insertar un videojuego en Videojuego se compruebe si es Externo, De Indev Reciente o No Reciente según si se indica la desarrolladora y su fecha de lanzamiento. Esto lo realiza el trigger **Inserta_Videojuego_Trigger**.
+
+![Inserta_Videojuego_Trigger](img/2022-02-01-16-38-35.png)
+
+Si no se indica la desarrolladora (valor nulo), inserta al videojuego en **De_Indev**. Si han pasado más de 30 días desde la publicación del título, se inserta con el campo _Tipo_ a 'No Reciente', y si no a 'Reciente'. Y si se indica el nombre de la desarrolladora, se inserta en **Externo**.
+
+Se realiza la inserción de 3 videojuegos de los diferentes tipos para comprobar que el trigger funciona.
+
+![Insert_Inserta_Videojuego_Trigger](img/2022-02-01-16-38-08.png)
+
+![Outpu_Inserta_Videojuego_Trigger](img/2022-02-01-16-37-35.png)
 
 
 ### **Comprobar la inserción en Copia_Fisica** <a name="checkcpfinsert"/>
@@ -232,7 +248,7 @@ Ambos disparadores hacen lo mismo: Comprueban que el usuario introducido no se e
 
 Para comprobar el funcionamiento de los triggers se realizan inserciones erróneas.
 
-![Insert_Check_Juega1_Insert](img/2022-01-30-13-06-36.png)
+![Insert_Check_Juega1_Insert](img/2022-02-01-17-11-39.png)
 
 ![Error_Check_Juega1_Insert](img/2022-01-30-13-07-58.png)
 
