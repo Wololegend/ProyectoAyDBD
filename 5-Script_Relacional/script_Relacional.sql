@@ -1079,12 +1079,8 @@ VALUES (NULL, 'DistTest1', 'VideojuegoTest1', 'Jan-01-2000', NULL);
 INSERT INTO Videojuego (Desarrolladora, Distribuidora, Nombre, Año, PEGI)
 VALUES ('DesTest', 'DistTest2', 'VideojuegoTest2', 'Feb-01-2001', NULL);
 
-SELECT * FROM De_Indev;
-
 INSERT INTO Juega2 (Email_Basico, Distribuidora, Nombre_DeIndev, Año)
 VALUES ('usuarioTest4@gmail.com', 'DistTest1', 'VideojuegoTest1', 'Jan-01-2000');
-
-SELECT * FROM Externo;
 
 INSERT INTO Juega1 (Email_Basico, Distribuidora, Nombre_Externo, Año)
 VALUES ('usuarioTest4@gmail.com', 'DistTest2', 'VideojuegoTest2', 'Feb-01-2001');
