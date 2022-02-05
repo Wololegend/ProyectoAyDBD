@@ -18,14 +18,14 @@ Cada carpeta tiene su propio README.md con una breve explicación, así como el 
 
 A continuación se describen brevemente los contenidos de cada directorio del repositorio.
 
-* **_1-Requisitos_**: Documento en PDF donde se detallan los requisitos del proyecto de bases de datos.
+* **_1-Requisitos_**: [Documento en PDF](https://drive.google.com/file/d/1uTBApNgbgSA9ytWgeyGlryErlCxUb1UN/view?usp=sharing) donde se detallan los requisitos del proyecto de bases de datos.
 
-* **_2-Entidad_Relación_**: Documento PDF con el informe donde se detallan todos los aspectos del modelo Entidad-Relación aplicado a este proyecto, así como el propio modelo en formato PNG.
+* **_2-Entidad_Relación_**: [Documento PDF](https://drive.google.com/file/d/1nLpJjIiD6JMR_2jpzHmLBf9SiwHpYUrs/view?usp=sharing) con el informe donde se detallan todos los aspectos del modelo Entidad-Relación aplicado a este proyecto, así como el propio modelo en formato PNG.
 
-* **_3-Relacional_**: Documento PDF con el informe donde se detallan todos los aspectos del modelo Relacional aplicado a este proyecto, así como el propio modelo en formato PNG y en texto.
+* **_3-Relacional_**: [Documento PDF](https://drive.google.com/file/d/1BZs5VvEpWbayenteN3ZwOAmPXB2SON4l/view?usp=sharing) con el informe donde se detallan todos los aspectos del modelo Relacional aplicado a este proyecto, así como el propio modelo en formato PNG y en texto.
 
-* **_4-Objeto_Relacional_**: Documento PDF con el informe donde se detallan todos los aspectos del modelo Objeto-Relacional aplicado a este proyecto, así como el propio modelo en formato PNG.
+* **_4-Objeto_Relacional_**: [Documento PDF](https://drive.google.com/file/d/1ZrjMiYvjDUoXqQPvNqQXRMtpXwcORWY6/view?usp=sharing) con el informe donde se detallan todos los aspectos del modelo Objeto-Relacional aplicado a este proyecto, así como el propio modelo en formato PNG.
 
-* **_5-Script_Relacional_**: Documento PDF con el informe donde se incluyen las descripciones de las tablas, triggers y funciones; así como el propio script donde también se incluyen las inserciones de datos, y un README.md con una **descripción de la generación de código de componentes y procedimientos**.
+* **_5-Script_Relacional_**: [Documento PDF](https://drive.google.com/file/d/1EQ7f-Sdk3Nj_43gUDjG-upSr75lSleYZ/view?usp=sharing) con el informe donde se incluyen las descripciones de las tablas, triggers y funciones; así como [el propio script](https://github.com/alu0101228587/ProyectoAyDBD/blob/main/5-Script_Relacional/script_Relacional.sql) donde también se incluyen las inserciones de datos, y un [README.md](https://github.com/alu0101228587/ProyectoAyDBD/blob/main/5-Script_Relacional/README.md) con una **descripción de la generación de código de componentes y procedimientos, y todas las capturas necesarias**.
 
-* **_6-Carga_de_Datos_**: Documento PDF con el informe donde se incluyen las diversas inserciones hechas en las tablas y los resultados obtenidos de estas.
+* **_6-Carga_de_Datos_**: [Documento PDF](https://drive.google.com/file/d/1jwWyjLjtb2FNwcwceRP3O4EDDR5xoLy9/view?usp=sharing) con el informe donde se incluyen las diversas inserciones hechas en las tablas y los resultados obtenidos de estas.
