@@ -5,6 +5,8 @@
 * Cristo García González - ALU0101204512
 * Antonella Sofía García Álvarez - ALU0101227610
 
+[Enlace al acuerdo de repartición del trabajo.](https://drive.google.com/file/d/1aDPGt3m9RwB4auPsHmrf3jZOt77-BR_B/view?usp=sharing)
+
 ## **Objetivo**
 Definir los requisitos de un proyecto de bases de datos con cierto nivel de complejidad que incluya varios tipos de relaciones (respecto a grado y tipo), Exclusión/Exclusividad/Inclusión/Inclusividad, tipos IS_A, etc.
 
